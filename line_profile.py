@@ -40,20 +40,22 @@ class LineProfile():
         self.baseline = baseline
         self.y_corr = y_corr
     
-    def fit(self):
+    def fit(self, dedug:bool=False):
         if self.y_corr == []:
             self.correct_y()
 
         # Fit
-        print("Running fit (this can take some time)...")
+        if dedug:
+            print("Running fit (this can take some time)...")
         fit_result = al_fitting_functions.fit_spectrum(self.x, self.y_corr, self.initial_centers,
                                 center_tolerance=self.center_tolerance,
                                 initial_fwhm=self.initial_fwhm,
                                 max_nfev=self.max_nfev,
                                 verbose=False)
-        # print("Fit result:")
-        # print(fit_result)
-        # print(fit_result['df_table'])
+        if dedug:
+            print("Fit result:")
+            print(fit_result)
+            print(fit_result['df_table'])
         self.fit_result = fit_result
 
     def plot_fit_and_components(self, ax):

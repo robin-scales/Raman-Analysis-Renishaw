@@ -12,8 +12,8 @@ class BaselineOptions:
     asls_p = 0.01       # asymmetry (0<p<1) smaller p treats peaks as positive; typical 0.001-0.1
     asls_niter = 10     # iterations (8-20)
     
-    center_tolerance = 1.0
-    initial_fwhm = 1.0
+    center_tolerance = 8
+    initial_fwhm = 5.0
     max_nfev = 5000
 
     # Polynomial baseline params (only if baseline_method == 'poly')
