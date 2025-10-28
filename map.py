@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from line_profile import LineProfile
+from input_file import InputFile
 
 def normal_interp(x, y, a, xi, yi):
     rbf = scipy.interpolate.Rbf(x, y, a)
@@ -16,36 +17,41 @@ def rescaled_interp(x, y, a, xi, yi):
     ai = np.ptp(a) * ai + a.min()
     return ai
 
-def pMAP_plot(df):
+def pMAP_plot(df, plot_as_image:bool=True, plot_as_scatter:bool=False, interp_resolution:complex=500j, cmap:str|list[str] = 'viridis', plot_title:str = ""):
         x = df["XList"]
         y = df["YList"]
         z = df["IList"]
-        # print(x); print(y); print(z)
 
         xi, yi = np.mgrid[x.min():x.max():500j, y.min():y.max():500j]
         z_rescale = rescaled_interp(x, y, z, xi, yi)
 
-        # plot
         fig, ax = plt.subplots()
 
-        im = ax.imshow(z_rescale.T, origin='lower',
-                        extent=[x.min(), x.max(), y.min(), y.max()]) # , vmin=566.3399156718697, vmax=566.5873836107614
-        # ax.scatter(x, y, c=a)
+        if type(cmap) is list:
+            cmap_image = cmap[0]
+            cmap_scatter = cmap[1]
+        else:
+            cmap_image = cmap
+            cmap_scatter = cmap
 
-        ax.scatter(x, y, s=15, c=z, cmap="grey") #  , vmin=566.3399156718697, vmax=566.5873836107614
+        if plot_as_image:
+            im = ax.imshow(z_rescale.T, origin='lower', extent=[x.min(), x.max(), y.min(), y.max()], cmap=cmap_image) # , vmin=566.3399156718697, vmax=566.5873836107614
+        if plot_as_scatter:
+            ax.scatter(x, y, s=15, c=z, cmap=cmap_scatter) #  , vmin=566.3399156718697, vmax=566.5873836107614
         ax.set_ylim(ax.get_ylim()[::-1])
 
-        # ax.set(xlim=(0, 8), xticks=np.arange(1, 8),
-        #        ylim=(0, 8), yticks=np.arange(1, 8))
+        print(f'Data range is {np.min(z_rescale)} to {np.max(z_rescale)}...')
 
-        print(np.min(z_rescale))
-        print(np.max(z_rescale))
+        plt.title(plot_title)
 
         cb = plt.colorbar(im)
         plt.show()
 
 
 filepath = r"xxx"
+inputfile = InputFile
+peak_number:int = 2 # peak_number starts from 1
+peak_name:str = inputfile.peak_names[peak_number-1] # -1 as peak_number starts from 1
 print(f'Working on {filepath}')
 df, scanType = load(filepath=filepath)
 
@@ -69,7 +75,9 @@ match scanType:
             l.fit()
             # line_profiles.append(l)
             df_l = l.fit_result['df_table']
-            peak_wave = df_l.loc[df_l['Peak Index'] == 2, 'Center Grvty'].iloc[0]
+            if i == 0:
+                 print(df_l)
+            peak_wave = df_l.loc[df_l['Peak Index'] == peak_number, 'Center Grvty'].iloc[0]
             IList[i] = peak_wave
             i += 1
         XList = unique_combinations['X'].to_list()
@@ -80,8 +88,14 @@ match scanType:
         s3 = pd.Series(IList, name='IList')
         df_out = pd.concat([s1, s2, s3], axis=1)
         print(df_out)
-        df_out.to_csv("output.txt", sep="\t", index=None)
-        pMAP_plot(df=df_out)
+        
+        # df_out.to_csv("output.txt", sep="\t", index=None)
+
+        plot_title = f"Peak {peak_name}"
+
+        pMAP_plot(df=df_out, cmap=['grey', 'viridis'], plot_title=plot_title, plot_as_scatter=True)
 
     case "pMAP":
-        pMAP_plot(df=df)
+        pMAP_plot(df=df, cmap='grey')
+
+print('Finished map.py')
