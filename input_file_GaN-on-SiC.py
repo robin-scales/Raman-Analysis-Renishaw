@@ -13,7 +13,7 @@ class BaselineOptions:
     asls_niter = 10     # iterations (8-20)
     
     center_tolerance = 8
-    initial_fwhm = 8.0
+    initial_fwhm = 5.0
     max_nfev = 5000
 
     # Polynomial baseline params (only if baseline_method == 'poly')
@@ -22,29 +22,29 @@ class BaselineOptions:
 class InputFile:
     """ Baseline options (tweak if needed)
     """
-    material_name = "SiC"
+    material_name = "GaN-on-Si"
 
     baselineOptions = BaselineOptions
 
     # ------------------ initial centers (user-provided) -------------------------
     # 566.273, 567
     initial_centers = [
-        796, 971
+        521.95, 567, 734
     ]
 
     peak_names = [
-        "TO", "LO"
+        "Si", "GaN E2 (high)", "GaN A1 (LO)"
     ]
 
     shift_per_GPa = [
-        None, None, None
+        None, 2.9, None
     ]
 
     GPa_per_strain = [
-        None, None, None
+        None, 188.53, None
     ]
 
-    resouces = []
+    resouces = ["https://doi.org/10.1002/sia.1134", "https://ramanlife.com/library/gallium-nitride/", "https://ramanlife.com/library/silicon-raman/"]
 
     # Allow any number, use len(initial_centers) dynamically
     n_peaks_global = len(initial_centers)
