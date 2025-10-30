@@ -14,18 +14,18 @@ def load(filepath: str):
             res[i] = col.replace("#", "")
     # Rname the columns
     df.columns = res
-    print(df)
-    print(res)
+    # print(df)
+    # print(res)
 
     match res:
         case ['Wave', 'Intensity']:
-            print("Loaded in single point")
+            # print("Loaded in single point")
             scanType = "SP"
         case ['X', 'Y', 'Wave', 'Intensity']:
-            print("Loaded in UNprocessed peak location map")
+            # print("Loaded in UNprocessed peak location map")
             scanType = "uMAP"
         case ['XList', 'YList', 'IList']:
-            print("Loaded in processed peak location map")
+            # print("Loaded in processed peak location map")
             scanType = "pMAP"
         case _:
           print("UNKNOWN CASE")
