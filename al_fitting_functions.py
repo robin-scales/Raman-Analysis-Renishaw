@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import spsolve
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, curve_fit
 import pandas as pd
 
 # ------------------ pseudo-Voigt & model definitions ------------------------
@@ -74,6 +74,14 @@ def fit_spectrum(x, y, initial_centers,
                         args=(x, y, n_peaks),
                         max_nfev=max_nfev, verbose=2 if verbose else 0)
     p_opt = res.x
+
+    # POSSIBLY TRY WITH CURVE FIT PER PEAK TO GET p_cov and hence fit quality
+    # https://stackoverflow.com/a/7589017/27490879
+    # p_opt, p_cov = curve_fit(residuals_flat, p0, bounds=(lb, ub),
+    #                 args=(x, y, n_peaks),
+    #                 max_nfev=max_nfev, verbose=2 if verbose else 0)
+
+    
     # prepare per-peak table
     rows = []; total_area = 0.0
     for i in range(n_peaks):

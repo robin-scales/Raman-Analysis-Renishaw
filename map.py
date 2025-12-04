@@ -26,7 +26,7 @@ def pMAP_plot(df, plot_as_image:bool=True, plot_as_scatter:bool=False, interp_re
         y = df["YList"]
         z = df["IList"]
 
-        peak_number = 1
+        peak_number = 2
 
         reference_method = "initial"
         match reference_method.lower():
@@ -67,7 +67,7 @@ def pMAP_plot(df, plot_as_image:bool=True, plot_as_scatter:bool=False, interp_re
             cmap_scatter = cmap
 
         if plot_as_image:
-            im = ax.imshow(z_rescale.T, origin='lower', extent=[x.min(), x.max(), y.min(), y.max()], cmap=cmap_image, vmin=794, vmax=797) # 
+            im = ax.imshow(z_rescale.T, origin='lower', extent=[x.min(), x.max(), y.min(), y.max()], cmap=cmap_image) # , vmin=794, vmax=797
         if plot_as_scatter:
             ax.scatter(x, y, s=15, c=z, cmap=cmap_scatter) #  , vmin=566.3399156718697, vmax=566.5873836107614
         ax.set_ylim(ax.get_ylim()[::-1])
@@ -82,13 +82,17 @@ def pMAP_plot(df, plot_as_image:bool=True, plot_as_scatter:bool=False, interp_re
         plt.show()
 
 
-filepath = r"SiC.txt"
+filepath = r"C:\Users\XXXX\YYYY\MAP.txt"
 inputfile = InputFile
-peak_number:int = 1 # peak_number starts from 1
+peak_number:int = 2 # peak_number starts from 1
 peak_name:str = inputfile.peak_names[peak_number-1] # -1 as peak_number starts from 1
 shift_per_GPa = inputfile.shift_per_GPa[peak_number-1] # Either float or None. If None does not calculate, otherwise, the option to plot stress is available.
 print(f'Working on {filepath}')
 df, scanType = load(filepath=filepath)
+
+plotSpectra = False
+if plotSpectra:
+    scanType = "spectra"
 
 match scanType:
     case "uMAP":
@@ -124,13 +128,50 @@ match scanType:
         df_out = pd.concat([s1, s2, s3], axis=1)
         print(df_out)
         
-        df_out.to_csv("SiC.txt", sep="\t", index=None)
+        # df_out.to_csv("SiC.txt", sep="\t", index=None)
 
         plot_title = f"Peak {peak_name}"
 
-        pMAP_plot(df=df_out, cmap=['grey', 'viridis'], plot_title=plot_title, plot_as_scatter=False, plot_variable = "wave")
+        pMAP_plot(df=df_out, cmap=['magma', 'viridis'], plot_title=plot_title, plot_as_scatter=False, plot_variable = "wave")
 
     case "pMAP":
         pMAP_plot(df=df, cmap='grey')
+
+    case "spectra":
+        fig, ax = plt.subplots()
+        x = df["X"]
+        y = df["Y"]
+        wave = df["Wave"]
+        intensity = df["Intensity"]
+        unique_combinations = df[['X', 'Y']].drop_duplicates()
+        print(unique_combinations)
+        line_profiles = []
+        IList = np.empty((len(unique_combinations.index),))
+        IList[:] = np.nan
+        print(IList)
+        i = 0
+        for index, row in unique_combinations.iterrows():
+            valid_comb = (row['X'], row['Y'])
+            df2 = df.set_index(['X', 'Y']).loc[valid_comb] # .reset_index()
+            l = LineProfile(x=df2['Wave'].to_numpy(), y_raw=df2['Intensity'].to_numpy())
+            l.fit()
+            l.plot_fit_and_components(ax=ax, peaks_nums_2_plot=None) # [peak_number]
+            # line_profiles.append(l)
+            df_l = l.fit_result['df_table']
+            if i == 0:
+                 print(df_l)
+            peak_wave = df_l.loc[df_l['Peak Index'] == peak_number, 'Center Grvty'].iloc[0]
+            IList[i] = peak_wave
+            i += 1
+        XList = unique_combinations['X'].to_list()
+        YList = unique_combinations['Y'].to_list()
+
+        s1 = pd.Series(XList, name='XList')
+        s2 = pd.Series(YList, name='YList')
+        s3 = pd.Series(IList, name='IList')
+        df_out = pd.concat([s1, s2, s3], axis=1)
+        print(df_out)
+        plt.show()
+
 
 print('Finished map.py')

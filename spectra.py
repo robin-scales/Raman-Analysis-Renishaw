@@ -83,7 +83,7 @@ def pMAP_plot(df, plot_as_image:bool=True, plot_as_scatter:bool=False, interp_re
         plt.show()
 
 
-filepath = r"C:\Users\mans3428\OneDrive - Nexus365\Postdoc Lilly Liu\Data\Raman\30102025\spectra.csv"
+filepath = r"C:\Users\XXXX\YYYY\spectra.csv"
 normaliseY = "off" # "off", "max", "norm"
 inputfile = InputFile
 peak_number:int = 1 # peak_number starts from 1
@@ -102,15 +102,15 @@ if os.path.isfile(filepath): # Does bob.txt exist?  Is it a file, or a directory
         print(os.path.basename(tail))   
         df0 = pd.read_csv(filepath, header=0, engine='python')
         for index, row in df0.iterrows():
-            # if row['plot'] == 0:
-            #     continue
-            if row['magnification'] != 20:
+            if row['plot'] == 0:
                 continue
+            # if row['magnification'] != 20:
+            #     continue
             files.append(row['filepath'])
             files_names.append(row['name'])
     else:
         files.append(filepath)
-        files_names.append(filepath)
+        files_names.append(tail)
 elif os.path.isdir(filepath):
     mode = "files"
     for file in os.listdir(filepath):
@@ -122,7 +122,7 @@ elif os.path.isdir(filepath):
 print("Files loaded")
 print(files_names)
 
-plt.figure()
+fig, ax = plt.subplots()
 
 for i, filepath in enumerate(files):
     df, scanType = load(filepath=filepath)
@@ -132,6 +132,7 @@ for i, filepath in enumerate(files):
 
     x = df['Wave'].copy()
     y = df['Intensity'].copy()
+    y_raw = y.copy()
     maxY = np.max(y)
     minY = np.min(y)
     match normaliseY:
@@ -147,8 +148,11 @@ for i, filepath in enumerate(files):
     # if maxY < 450:
     #     print(f"Skipping {files_names[i]} as below max Y limit")
     #     continue
+    l = LineProfile(x=x.to_numpy(), y_raw=y_raw.to_numpy())
+    l.fit()
 
-    plt.plot(x, y, label=files_names[i])
+    l.plot_fit_and_components(ax=ax, peaks_nums_2_plot=0) # [2]
+    # ax.plot(x, y, label=files_names[i])
 
 # match mode:
 #     case "file":
@@ -156,10 +160,22 @@ for i, filepath in enumerate(files):
 #         y = df["Y"]
 
 #     case "files":
-plt.ylabel(ylabel)
-plt.xlabel(r"Wavenumber [$cm^-2$]")
-plt.xlim(left=0)
-plt.legend()
+
+
+ymax = 20E3 # 60E3
+# plt.vlines([111.0, 169.9, 200.2, 320.0, 346.6, 416.2, 474.9, 630.0, 658.3, 766.7], ymin=0, ymax=ymax, label=r"$\beta$ Ga2O3 (010)", linestyles='--', colors='green')
+# plt.vlines([114.8, 144.8, 352.2, 474.9, 652.3], ymin=0, ymax=ymax, label=r"$\beta$ Ga2O3 (-201)", linestyles='--', colors='red')
+# ax.vlines([113.2, 145.1, 169.5, 199.6, 319.8, 346.1, 417.5, 475.8, 629.9, 659.9, 767.0], ymin=0, ymax=ymax, label=r"$\beta$ Ga2O3 (100)", linestyles='--', colors='black')
+
+
+# plt.vlines([1332], ymin=0, ymax=ymax, label="Diamond", linestyles='--') # 1330 from Raman Database
+# plt.vlines([1550], ymin=0, ymax=ymax, label="G-peak", linestyles='-.')
+
+
+ax.set_ylabel(ylabel)
+ax.set_xlabel(r"Wavenumber [$cm^-2$]")
+ax.set_xlim(left=0)
+ax.legend()
 plt.show()
 
 print('Finished spectra.py')

@@ -58,18 +58,29 @@ class LineProfile():
             print(fit_result['df_table'])
         self.fit_result = fit_result
 
-    def plot_fit_and_components(self, ax):
+    def plot_fit_and_components(self, ax, peaks_nums_2_plot:list[int]|int|None = None):
         out_prefix="fit_result"
         p_opt = self.fit_result['params']
         n_peaks = int(len(p_opt) / 4)
         # plt.figure(figsize=(10,6))
-        ax.plot(self.x, self.y_corr, label='baseline-subtracted data', lw=1)
-        ax.plot(self.x, self.fit_result['y_fit'], label='total fit', lw=1.5)
-        for i in range(n_peaks):
-            A = p_opt[4*i + 0]; x0 = p_opt[4*i + 1]; fwhm = p_opt[4*i + 2]; eta = p_opt[4*i + 3]
-            comp = pseudo_voigt(self.x, A, x0, fwhm, eta)
-            ax.plot(self.x, comp, '--', lw=1, alpha=0.7, label=f'comp {i+1}' if i<6 else None)
+
+
+        if peaks_nums_2_plot is not None:
+            if peaks_nums_2_plot == 0:
+                peaks_nums_2_plot = range(n_peaks)
+                ax.plot(self.x, self.y_corr, label='baseline-subtracted data', lw=1)
+                ax.plot(self.x, self.fit_result['y_fit'], label='total fit', lw=1.5)
+            else:
+                peaks_nums_2_plot = [x - 1 for x in peaks_nums_2_plot]
+
+            for i in peaks_nums_2_plot:
+                A = p_opt[4*i + 0]; x0 = p_opt[4*i + 1]; fwhm = p_opt[4*i + 2]; eta = p_opt[4*i + 3]
+                comp = pseudo_voigt(self.x, A, x0, fwhm, eta)
+                ax.plot(self.x, comp, '--', lw=1, alpha=0.7, label=f'comp {i+1}' if i<6 else None)
+        else:
+            ax.plot(self.x, self.fit_result['y_fit'], label='total fit', lw=1.5)
+
         ax.legend(); plt.xlabel('x'); plt.ylabel('y'); plt.title(out_prefix + " - fit")
-        ax.tight_layout()
+        # ax.tight_layout()
         # fit_png = out_prefix + ".png"
         # plt.savefig(fit_png, dpi=200); plt.close()
